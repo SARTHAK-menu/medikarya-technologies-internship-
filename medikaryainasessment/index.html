@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medikarya Technologies — Student Clinical Portal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Mobile sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="logo-icon">🏥</div>
+        <div class="sidebar-brand-text">
+          <span class="brand-name">Medikarya</span>
+          <span class="brand-sub">Technologies</span>
+        </div>
+      </div>
+      <button class="sidebar-close" onclick="toggleSidebar(false)">✕</button>
+    </div>
+
+    <button class="btn-newcase" onclick="startNewCase()">
+      <span class="btn-newcase-icon">＋</span> New Case
+    </button>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Menu</div>
+      <button class="sidebar-link active" data-view="dashboard" onclick="navTo('dashboard')">
+        <span class="sidebar-link-icon">📋</span> Cases
+      </button>
+      <button class="sidebar-link" data-view="drafts" onclick="navToDrafts()">
+        <span class="sidebar-link-icon">D</span>
+        <span class="sidebar-link-text">Draft Cases</span>
+        <span class="sidebar-count" id="sidebar-draft-count">0</span>
+      </button>
+      <button class="sidebar-link" data-view="profile" onclick="navTo('profile')">
+        <span class="sidebar-link-icon">👤</span> Profile
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-mini-profile" onclick="navTo('profile')">
+        <div class="avatar" id="sidebar-avatar">ST</div>
+        <div class="sidebar-mini-info">
+          <div class="sidebar-mini-name" id="sidebar-profile-name">Student</div>
+          <div class="sidebar-mini-role" id="sidebar-profile-email">Add your profile</div>
+        </div>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-wrap">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar(true)">☰</button>
+        <div class="topbar-title" id="topbar-title">Patient Cases</div>
+      </div>
+      <button class="topbar-profile-btn" onclick="navTo('profile')">
+        <div class="topbar-profile-info">
+          <span class="topbar-profile-name" id="topbar-profile-name">Student</span>
+          <span class="topbar-profile-role" id="topbar-profile-role">My Profile</span>
+        </div>
+        <div class="avatar avatar-sm" id="topbar-avatar">ST</div>
+      </button>
+    </header>
+
+    <div class="app">
+
+
+  <!-- ══ DASHBOARD VIEW ══ -->
+  <div class="view active" id="view-dashboard">
+    <div class="dashboard-header">
+      <div>
+        <div class="page-title">Patient Cases</div>
+        <div class="page-subtitle">Manage and review all clinical cases</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card accent-green">
+        <div class="stat-label">Total Cases</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-label">Draft Cases</div>
+        <div class="stat-value" id="stat-draft">0</div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-label">Completed Cases</div>
+        <div class="stat-value" id="stat-completed">0</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <div class="search-input-wrap">
+
+        <input class="search-input" type="text" placeholder="Search by patient name, case ID, or diagnosis..." oninput="filterCases(this.value)" id="search-input" autocomplete="off">
+        <span class="search-clear" id="search-clear" onclick="clearSearch()" title="Clear search">✕</span>
+      </div>
+      <select class="filter-select" onchange="filterByStatus(this.value)">
+        <option value="">All Status</option>
+        <option value="Draft">Draft</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+
+    <div class="cases-table-wrap">
+      <table class="cases-table" id="cases-table">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Age / Gender</th>
+            <th>Chief Complaint</th>
+            <th>Diagnosis</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cases-tbody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="icon" id="empty-state-icon">📁</div>
+        <h3 id="empty-state-title">No cases yet</h3>
+        <p id="empty-state-text">Create your first patient case to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ NEW CASE FORM VIEW ══ -->
+  <div class="view" id="view-form">
+    <div class="form-card">
+      <div class="form-header">
+        <button class="back-btn" onclick="confirmBack()">←</button>
+        <div class="form-header-text">
+          <h2>New Patient Case</h2>
+          <p>Fill all steps carefully before submitting</p>
+        </div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step active" id="step-ind-1">
+          <div class="step-num">1</div>
+          <div class="step-label">Demographics</div>
+        </div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step" id="step-ind-2">
+          <div class="step-num">2</div>
+          <div class="step-label">History</div>
+        </div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step" id="step-ind-3">
+          <div class="step-num">3</div>
+          <div class="step-label">Examination</div>
+        </div>
+        <div class="step-line" id="line-3"></div>
+        <div class="step" id="step-ind-4">
+          <div class="step-num">4</div>
+          <div class="step-label">Investigations</div>
+        </div>
+        <div class="step-line" id="line-4"></div>
+        <div class="step" id="step-ind-5">
+          <div class="step-num">5</div>
+          <div class="step-label">Diagnosis & Plan</div>
+        </div>
+      </div>
+
+      <div class="form-body">
+
+        <!-- STEP 1: Demographics -->
+        <div class="step-panel active" id="panel-1">
+          <div class="section-title"><span class="icon">👤</span> Patient Demographics</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name <span class="required">*</span></label>
+              <input type="text" id="f-name" placeholder="e.g. Ramesh Kumar Singh" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Age <span class="required">*</span></label>
+              <input type="number" id="f-age" placeholder="Years" min="0" max="120">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gender <span class="required">*</span></label>
+              <div class="radio-group" id="rg-gender">
+                <label class="radio-option" onclick="selectRadio('rg-gender', this, 'f-gender-val', 'Male')">
+                  <input type="radio" name="gender" value="Male"> Male
+                </label>
+                <label class="radio-option" onclick="selectRadio('rg-gender', this, 'f-gender-val', 'Female')">
+                  <input type="radio" name="gender" value="Female"> Female
+                </label>
+                <label class="radio-option" onclick="selectRadio('rg-gender', this, 'f-gender-val', 'Other')">
+                  <input type="radio" name="gender" value="Other"> Other
+                </label>
+              </div>
+              <input type="hidden" id="f-gender-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Admission</label>
+              <input type="date" id="f-admission-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Number</label>
+              <input type="tel" id="f-contact" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input type="text" id="f-address" placeholder="City, State">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Occupation</label>
+              <input type="text" id="f-occupation" placeholder="e.g. Farmer, Teacher, Student">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Religion</label>
+              <input type="text" id="f-religion" placeholder="e.g. Hindu, Muslim, Christian">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Socioeconomic Status</label>
+              <select id="f-socio">
+                <option value="">Select...</option>
+                <option>Upper class</option>
+                <option>Upper middle</option>
+                <option>Lower middle</option>
+                <option>Poor</option>
+                <option>Below poverty line</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ward / Room</label>
+              <input type="text" id="f-ward" placeholder="e.g. Ward 4, Room 12">
+            </div>
+          </div>
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">🙅</span> Informant</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Informant Name</label>
+              <input type="text" id="f-informant" placeholder="Who provided the history?">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Relation to Patient</label>
+              <input type="text" id="f-informant-rel" placeholder="e.g. Self, Son, Wife">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reliability of History</label>
+              <div class="radio-group" id="rg-reliable">
+                <label class="radio-option" onclick="selectRadio('rg-reliable', this, 'f-reliable-val', 'Reliable')">
+                  <input type="radio"> Reliable
+                </label>
+                <label class="radio-option" onclick="selectRadio('rg-reliable', this, 'f-reliable-val', 'Partially reliable')">
+                  <input type="radio"> Partially reliable
+                </label>
+                <label class="radio-option" onclick="selectRadio('rg-reliable', this, 'f-reliable-val', 'Unreliable')">
+                  <input type="radio"> Unreliable
+                </label>
+              </div>
+              <input type="hidden" id="f-reliable-val">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: History -->
+        <div class="step-panel" id="panel-2">
+          <div class="section-title"><span class="icon">📋</span> Chief Complaint & History</div>
+          <div class="form-grid cols-1">
+            <div class="form-group">
+              <label class="form-label">Chief Complaint <span class="required">*</span></label>
+              <textarea id="f-chief-complaint" placeholder="State the main complaint in patient's own words with duration...&#10;e.g. Fever with chills for 5 days, Cough for 3 weeks"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">History of Present Illness (HPI)</label>
+              <textarea id="f-hpi" placeholder="Detailed narrative: onset, duration, character, radiation, associated symptoms, aggravating/relieving factors, severity (0-10)..." style="min-height:120px;"></textarea>
+            </div>
+          </div>
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">⏳</span> Past History</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Past Medical History</label>
+              <textarea id="f-past-medical" placeholder="Hypertension, Diabetes, TB, Jaundice, Asthma, Thyroid disorders..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Past Surgical History</label>
+              <textarea id="f-past-surgical" placeholder="Any previous surgeries, with date and hospital..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Drug History & Allergies</label>
+              <textarea id="f-drugs" placeholder="Current medications, dosage, any known allergies (drug/food)..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Family History</label>
+              <textarea id="f-family" placeholder="Similar illness in family, hereditary conditions, consanguinity..."></textarea>
+            </div>
+          </div>
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">🔄</span> Personal & Social History</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Diet</label>
+              <div class="radio-group" id="rg-diet">
+                <label class="radio-option" onclick="selectRadio('rg-diet', this, 'f-diet-val', 'Vegetarian')"><input type="radio"> Vegetarian</label>
+                <label class="radio-option" onclick="selectRadio('rg-diet', this, 'f-diet-val', 'Non-vegetarian')"><input type="radio"> Non-vegetarian</label>
+                <label class="radio-option" onclick="selectRadio('rg-diet', this, 'f-diet-val', 'Mixed')"><input type="radio"> Mixed</label>
+              </div>
+              <input type="hidden" id="f-diet-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Appetite</label>
+              <div class="radio-group" id="rg-appetite">
+                <label class="radio-option" onclick="selectRadio('rg-appetite', this, 'f-appetite-val', 'Normal')"><input type="radio"> Normal</label>
+                <label class="radio-option" onclick="selectRadio('rg-appetite', this, 'f-appetite-val', 'Decreased')"><input type="radio"> Decreased</label>
+                <label class="radio-option" onclick="selectRadio('rg-appetite', this, 'f-appetite-val', 'Increased')"><input type="radio"> Increased</label>
+              </div>
+              <input type="hidden" id="f-appetite-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sleep</label>
+              <div class="radio-group" id="rg-sleep">
+                <label class="radio-option" onclick="selectRadio('rg-sleep', this, 'f-sleep-val', 'Adequate')"><input type="radio"> Adequate</label>
+                <label class="radio-option" onclick="selectRadio('rg-sleep', this, 'f-sleep-val', 'Disturbed')"><input type="radio"> Disturbed</label>
+              </div>
+              <input type="hidden" id="f-sleep-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bladder & Bowel</label>
+              <div class="radio-group" id="rg-bladder">
+                <label class="radio-option" onclick="selectRadio('rg-bladder', this, 'f-bladder-val', 'Regular')"><input type="radio"> Regular</label>
+                <label class="radio-option" onclick="selectRadio('rg-bladder', this, 'f-bladder-val', 'Irregular')"><input type="radio"> Irregular</label>
+                <label class="radio-option" onclick="selectRadio('rg-bladder', this, 'f-bladder-val', 'Constipated')"><input type="radio"> Constipated</label>
+              </div>
+              <input type="hidden" id="f-bladder-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Addictions</label>
+              <div class="checkbox-group" id="cg-addiction">
+                <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-addiction-val')"><input type="checkbox"> Smoking</label>
+                <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-addiction-val')"><input type="checkbox"> Alcohol</label>
+                <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-addiction-val')"><input type="checkbox"> Tobacco</label>
+                <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-addiction-val')"><input type="checkbox"> None</label>
+              </div>
+              <input type="hidden" id="f-addiction-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Menstrual History (if applicable)</label>
+              <textarea id="f-menstrual" placeholder="LMP, cycle regularity, flow, any complaints..." style="min-height:60px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Examination Findings -->
+        <div class="step-panel" id="panel-3">
+          <div class="section-title"><span class="icon">🩺</span> General Physical Examination</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">General Appearance</label>
+              <div class="radio-group" id="rg-appearance">
+                <label class="radio-option" onclick="selectRadio('rg-appearance', this, 'f-appearance-val', 'Well built & nourished')"><input type="radio"> Well built</label>
+                <label class="radio-option" onclick="selectRadio('rg-appearance', this, 'f-appearance-val', 'Moderately built')"><input type="radio"> Moderately built</label>
+                <label class="radio-option" onclick="selectRadio('rg-appearance', this, 'f-appearance-val', 'Poorly built')"><input type="radio"> Poorly built</label>
+              </div>
+              <input type="hidden" id="f-appearance-val">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Consciousness</label>
+              <div class="radio-group" id="rg-consciousness">
+                <label class="radio-option" onclick="selectRadio('rg-consciousness', this, 'f-consciousness-val', 'Conscious & oriented')"><input type="radio"> Conscious</label>
+                <label class="radio-option" onclick="selectRadio('rg-consciousness', this, 'f-consciousness-val', 'Drowsy')"><input type="radio"> Drowsy</label>
+                <label class="radio-option" onclick="selectRadio('rg-consciousness', this, 'f-consciousness-val', 'Stupor')"><input type="radio"> Stupor</label>
+                <label class="radio-option" onclick="selectRadio('rg-consciousness', this, 'f-consciousness-val', 'Coma')"><input type="radio"> Coma</label>
+              </div>
+              <input type="hidden" id="f-consciousness-val">
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <label class="form-label">Pallor, Icterus, Cyanosis, Clubbing, Lymphadenopathy, Edema</label>
+            <div class="checkbox-group" id="cg-picle" style="margin-top:6px;">
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Pallor</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Icterus</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Cyanosis</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Clubbing</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Lymphadenopathy</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> Edema</label>
+              <label class="checkbox-option" onclick="toggleCheckbox(this, 'f-picle-val')"><input type="checkbox"> None</label>
+            </div>
+            <input type="hidden" id="f-picle-val">
+          </div>
+
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">❤️</span> Vital Signs</div>
+          <div class="vitals-grid">
+            <div class="vital-card">
+              <label>Temperature</label>
+              <input type="text" id="v-temp" placeholder="98.6">
+              <span class="vital-unit">°F</span>
+            </div>
+            <div class="vital-card">
+              <label>Pulse</label>
+              <input type="text" id="v-pulse" placeholder="72">
+              <span class="vital-unit">bpm</span>
+            </div>
+            <div class="vital-card">
+              <label>BP Systolic</label>
+              <input type="text" id="v-bp-sys" placeholder="120">
+              <span class="vital-unit">mmHg</span>
+            </div>
+            <div class="vital-card">
+              <label>BP Diastolic</label>
+              <input type="text" id="v-bp-dia" placeholder="80">
+              <span class="vital-unit">mmHg</span>
+            </div>
+            <div class="vital-card">
+              <label>Resp. Rate</label>
+              <input type="text" id="v-rr" placeholder="18">
+              <span class="vital-unit">/ min</span>
+            </div>
+            <div class="vital-card">
+              <label>SpO2</label>
+              <input type="text" id="v-spo2" placeholder="98">
+              <span class="vital-unit">%</span>
+            </div>
+            <div class="vital-card">
+              <label>Weight</label>
+              <input type="text" id="v-weight" placeholder="65">
+              <span class="vital-unit">kg</span>
+            </div>
+            <div class="vital-card">
+              <label>Height</label>
+              <input type="text" id="v-height" placeholder="170">
+              <span class="vital-unit">cm</span>
+            </div>
+          </div>
+
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">🔍</span> Systemic Examination</div>
+          <p class="hint" style="margin-bottom:10px;">Toggle systems to add findings</p>
+          <div class="systems-grid">
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-cvs')">
+                <span>Cardiovascular (CVS)</span>
+                <div class="toggle-switch" id="tog-sys-cvs"></div>
+              </div>
+              <div class="system-detail" id="sys-cvs">
+                <textarea id="f-cvs" placeholder="Heart sounds, murmurs, JVP, apex beat..."></textarea>
+              </div>
+            </div>
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-rs')">
+                <span>Respiratory (RS)</span>
+                <div class="toggle-switch" id="tog-sys-rs"></div>
+              </div>
+              <div class="system-detail" id="sys-rs">
+                <textarea id="f-rs" placeholder="Air entry, breath sounds, crepitations, wheeze..."></textarea>
+              </div>
+            </div>
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-gi')">
+                <span>Gastrointestinal (GI)</span>
+                <div class="toggle-switch" id="tog-sys-gi"></div>
+              </div>
+              <div class="system-detail" id="sys-gi">
+                <textarea id="f-gi" placeholder="Abdomen shape, tenderness, organomegaly, bowel sounds..."></textarea>
+              </div>
+            </div>
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-cns')">
+                <span>CNS</span>
+                <div class="toggle-switch" id="tog-sys-cns"></div>
+              </div>
+              <div class="system-detail" id="sys-cns">
+                <textarea id="f-cns" placeholder="Higher functions, cranial nerves, motor, sensory, reflexes..."></textarea>
+              </div>
+            </div>
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-msk')">
+                <span>Musculoskeletal</span>
+                <div class="toggle-switch" id="tog-sys-msk"></div>
+              </div>
+              <div class="system-detail" id="sys-msk">
+                <textarea id="f-msk" placeholder="Joints, swelling, deformity, range of motion..."></textarea>
+              </div>
+            </div>
+            <div class="system-toggle">
+              <div class="system-toggle-header" onclick="toggleSystem('sys-skin')">
+                <span>Dermatology / Skin</span>
+                <div class="toggle-switch" id="tog-sys-skin"></div>
+              </div>
+              <div class="system-detail" id="sys-skin">
+                <textarea id="f-skin" placeholder="Rash, lesion type, distribution, color, texture..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Investigations -->
+        <div class="step-panel" id="panel-4">
+          <div class="section-title"><span class="icon">🔬</span> Laboratory Investigations</div>
+          <div class="form-grid cols-3">
+            <div class="form-group">
+              <label class="form-label">Hemoglobin (Hb)</label>
+              <input type="text" id="inv-hb" placeholder="g/dL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">TLC / WBC</label>
+              <input type="text" id="inv-tlc" placeholder="cells/mm³">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Platelets</label>
+              <input type="text" id="inv-plt" placeholder="lakhs/mm³">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Sugar (Fasting)</label>
+              <input type="text" id="inv-bsf" placeholder="mg/dL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Sugar (PP)</label>
+              <input type="text" id="inv-bspp" placeholder="mg/dL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">HbA1c</label>
+              <input type="text" id="inv-hba1c" placeholder="%">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Serum Creatinine</label>
+              <input type="text" id="inv-creatinine" placeholder="mg/dL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Urea</label>
+              <input type="text" id="inv-urea" placeholder="mg/dL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sodium (Na+)</label>
+              <input type="text" id="inv-na" placeholder="mEq/L">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Potassium (K+)</label>
+              <input type="text" id="inv-k" placeholder="mEq/L">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SGOT / AST</label>
+              <input type="text" id="inv-sgot" placeholder="U/L">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SGPT / ALT</label>
+              <input type="text" id="inv-sgpt" placeholder="U/L">
+            </div>
+          </div>
+
+          <hr class="form-section-divider">
+          <div class="form-group">
+            <label class="form-label">Urine Examination</label>
+            <textarea id="inv-urine" placeholder="Albumin, sugar, pus cells, RBC, casts..."></textarea>
+          </div>
+          <hr class="form-section-divider">
+          <div class="form-group">
+            <label class="form-label">Imaging Reports (X-ray, USG, CT, MRI)</label>
+            <textarea id="inv-imaging" placeholder="Describe findings from any imaging done..."></textarea>
+          </div>
+          <div class="form-group" style="margin-top:12px;">
+            <label class="form-label">Other Special Investigations</label>
+            <textarea id="inv-other" placeholder="ECG, Echo, Bronchoscopy, Biopsy, Culture & Sensitivity..."></textarea>
+          </div>
+        </div>
+
+        <!-- STEP 5: Diagnosis & Plan -->
+        <div class="step-panel" id="panel-5">
+          <div class="section-title"><span class="icon">🏷️</span> Diagnosis</div>
+          <div class="form-grid cols-1">
+            <div class="form-group">
+              <label class="form-label">Provisional Diagnosis <span class="required">*</span></label>
+              <textarea id="f-provisional-dx" placeholder="Most likely diagnosis based on history and examination..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Differential Diagnoses</label>
+              <textarea id="f-diff-dx" placeholder="List other possible diagnoses to rule out..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Final / Confirmed Diagnosis</label>
+              <textarea id="f-final-dx" placeholder="Confirmed after investigations (can be updated later)..."></textarea>
+            </div>
+          </div>
+
+          <hr class="form-section-divider">
+          <div class="section-title"><span class="icon">💊</span> Treatment Plan</div>
+          <div class="form-grid cols-1">
+            <div class="form-group">
+              <label class="form-label">Medications Prescribed</label>
+              <textarea id="f-medications" placeholder="Drug name, dose, route, frequency, duration...&#10;e.g. Tab. Amoxicillin 500mg PO TDS × 7 days"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Non-pharmacological Measures</label>
+              <textarea id="f-non-pharm" placeholder="Diet advice, physiotherapy, rest, counseling..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Follow-up Plan</label>
+              <textarea id="f-followup" placeholder="When to review, repeat investigations, referrals..."></textarea>
+            </div>
+          </div>
+
+          <hr class="form-section-divider">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Case Status</label>
+              <select id="f-status">
+                <option value="Draft">Draft</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Completed">Completed (Discharged)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prognosis</label>
+              <div class="radio-group" id="rg-prognosis">
+                <label class="radio-option" onclick="selectRadio('rg-prognosis', this, 'f-prognosis-val', 'Good')"><input type="radio"> Good</label>
+                <label class="radio-option" onclick="selectRadio('rg-prognosis', this, 'f-prognosis-val', 'Fair')"><input type="radio"> Fair</label>
+                <label class="radio-option" onclick="selectRadio('rg-prognosis', this, 'f-prognosis-val', 'Guarded')"><input type="radio"> Guarded</label>
+                <label class="radio-option" onclick="selectRadio('rg-prognosis', this, 'f-prognosis-val', 'Poor')"><input type="radio"> Poor</label>
+              </div>
+              <input type="hidden" id="f-prognosis-val">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Student Notes / Clinical Pearls</label>
+              <textarea id="f-notes" placeholder="Your personal observations, learning points from this case..."></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /form-body -->
+
+      <div class="form-nav">
+        <div class="step-indicator" id="step-indicator">Step 1 of 5</div>
+        <div class="form-nav-actions">
+          <button class="btn-secondary btn-draft" id="btn-save-draft" onclick="saveDraftCase()">Save Draft</button>
+          <button class="btn-secondary" id="btn-prev" onclick="prevStep()" style="display:none;">← Previous</button>
+          <button class="btn-primary" id="btn-next" onclick="nextStep()">Next Step →</button>
+          <button class="btn-primary" id="btn-preview" onclick="showPreview()" style="display:none; background: var(--accent); border-color: var(--accent);">👁 Preview & Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PREVIEW VIEW ══ -->
+  <div class="view" id="view-preview">
+    <div class="dashboard-header">
+      <div>
+        <div class="page-title">Case Summary Preview</div>
+        <div class="page-subtitle">Review carefully before submitting</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="showView('form')">✏️ Edit</button>
+        <button class="btn-secondary btn-draft" onclick="saveDraftCase(true)">Save Draft</button>
+        <button class="btn-primary" onclick="submitCase()">✓ Submit Case</button>
+      </div>
+    </div>
+
+    <div class="preview-card" id="preview-content">
+      <!-- Built dynamically -->
+    </div>
+  </div>
+
+  <!-- ══ CASE DETAIL VIEW ══ -->
+  <div class="view" id="view-detail">
+    <div class="case-detail-header">
+      <div>
+        <button class="btn-secondary" onclick="showView('dashboard')" style="margin-bottom:8px;">← Back to Cases</button>
+        <div class="page-title" id="detail-patient-name">Patient Name</div>
+        <div class="page-subtitle" id="detail-patient-meta">Age | Gender | Case ID</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="printCase()">🖨 Print</button>
+        <button class="btn-danger" onclick="deleteCurrentCase()">🗑 Delete</button>
+      </div>
+    </div>
+
+    <div class="detail-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-overview', this)">Overview</button>
+      <button class="tab-btn" onclick="switchTab('tab-history', this)">History</button>
+      <button class="tab-btn" onclick="switchTab('tab-exam', this)">Examination</button>
+      <button class="tab-btn" onclick="switchTab('tab-investigations', this)">Investigations</button>
+      <button class="tab-btn" onclick="switchTab('tab-diagnosis', this)">Diagnosis & Plan</button>
+    </div>
+
+    <div class="tab-content active" id="tab-overview">
+      <div id="detail-overview-content"></div>
+    </div>
+    <div class="tab-content" id="tab-history">
+      <div id="detail-history-content"></div>
+    </div>
+    <div class="tab-content" id="tab-exam">
+      <div id="detail-exam-content"></div>
+    </div>
+    <div class="tab-content" id="tab-investigations">
+      <div id="detail-investigations-content"></div>
+    </div>
+    <div class="tab-content" id="tab-diagnosis">
+      <div id="detail-diagnosis-content"></div>
+    </div>
+  </div>
+
+  <!-- ══ PROFILE VIEW ══ -->
+  <div class="view" id="view-profile">
+    <div class="dashboard-header">
+      <div>
+        <div class="page-title">My Profile</div>
+        <div class="page-subtitle">Your details as shown across the portal</div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-card-banner"></div>
+      <div class="profile-card-body">
+        <div class="profile-avatar-lg" id="profile-avatar-lg">ST</div>
+
+        <div class="form-grid" style="margin-top:1.5rem;">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" id="profile-name" placeholder="e.g. Aditi Sharma" oninput="livePreviewProfile()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="required">*</span></label>
+            <input type="email" id="profile-email" placeholder="e.g. aditi.sharma@medikarya.edu" oninput="livePreviewProfile()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Number</label>
+            <input type="tel" id="profile-contact" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">College / Year</label>
+            <input type="text" id="profile-college" placeholder="e.g. Final Year MBBS, GMC">
+          </div>
+        </div>
+
+        <hr class="form-section-divider">
+
+        <div class="profile-stats-row">
+          <div class="profile-stat">
+            <div class="profile-stat-value" id="profile-stat-total">0</div>
+            <div class="profile-stat-label">Total Cases Logged</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-value" id="profile-stat-completed">0</div>
+            <div class="profile-stat-label">Completed</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:1.5rem; gap:10px;">
+          <button class="btn-primary" onclick="saveProfileForm()">💾 Save Profile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    </div><!-- /app -->
+
+  </div><!-- /main-wrap -->
+
+</div><!-- /app-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
